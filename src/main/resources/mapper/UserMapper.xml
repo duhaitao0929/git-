@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lening.mapper.UserMapper">
+    <resultMap id="usermap" type="UserBean">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="age" column="age"/>
+        <result property="birthday" column="birthday"/>
+        <result property="portrait" column="portrait" />
+        <result property="gid" column="gid" />
+        <result property="rid" column="rid" />
+        <!--   一对一或者多对一使用association,
+        property指定实体中关联对象的字段名  -->
+
+        <!-- 一对多或者多对多使用collection，
+        property和resultMap属性同上&ndash -->
+        <association property="gradeBean" javaType="GradeBean">
+            <id column="gid" property="gid"/>
+            <result column="gname" property="gname"/>
+        </association>
+        <association property="bumenBean" javaType="BumenBean">
+            <id column="deptid" property="deptid"/>
+            <result column="dname" property="dname"/>
+        </association>
+        <association property="jueseBean" javaType="JueseBean">
+            <id column="rid" property="rid"/>
+            <result column="rname" property="rname"/>
+        </association>
+
+    </resultMap>
+    <!-- 查询员工列表信息 -->
+    <select id="findAll" resultMap="usermap">
+       SELECT * FROM `t_user` a
+         LEFT JOIN t_grade d on a.gid=d.gid
+        LEFT JOIN t_dept b on a.deptid=b.deptid
+        LEFT JOIN t_role c ON a.rid=c.rid
+    </select>
+
+    <!-- 查询员工信息 -->
+    <select id="getUserById" resultMap="usermap">
+        SELECT * FROM `t_user` a
+         LEFT JOIN t_grade d on a.gid=d.gid
+        LEFT JOIN t_dept b on a.deptid=b.deptid
+        LEFT JOIN t_role c ON a.rid=c.rid
+        where a.id=#{id}
+    </select>
+
+    <select id="getPowerList" resultType="PowerBean">
+        select * from t_power
+    </select>
+    <!-- 查询部门信息 -->
+    <select id="getbumenList" resultType="BumenBean">
+        SELECT * FROM `t_dept`;
+    </select>
+    <!-- 查询角色 条件 部门id  -->
+    <select id="getRoleListByDeptid" resultType="JueseBean">
+        SELECT * FROM `t_role` where deptid=#{deptid}
+    </select>
+    <!-- 修改 -->
+    <update id="updateUserBumenJuese">
+        update t_user set deptid=#{deptid},rid=#{rid} where id=#{id}
+    </update>
+
+
+
+    <!--删除单个  -->
+    <delete id="deleteUserid">
+		delete from t_user where id=#{id}
+	</delete>
+    <!-- 添加 -->
+    <insert id="addUser" parameterType="UserBean">
+        insert into t_user (username,password,age,birthday) values (#{username},#{password},#{age},#{birthday})
+    </insert>
+    <!-- 修改  -->
+    <update id="updateUser" parameterType="UserBean">
+        update t_user set username = #{username},password=#{password},age = #{age},birthday=#{birthday}where id = #{id}
+    </update>
+    <!-- 模糊查询 -->
+    <select id="findLikeName" parameterType="string" resultMap="usermap">
+        SELECT * FROM t_user LEFT JOIN t_dept ON t_user.deptid = t_dept.deptid LEFT JOIN t_role ON t_user.rid = t_role.rid WHERE t_user.username like concat('%',#{likeName},'%')
+    </select>
+    <!--  范围查询生日  -->
+    <select id="findByBirthday" parameterType="map" resultMap="usermap">
+        SELECT * FROM t_user LEFT JOIN t_dept ON t_user.deptid = t_dept.deptid LEFT JOIN t_role ON t_user.rid = t_role.rid WHERE t_user.birthday >= #{sbirthday} AND t_user.birthday &lt;= #{ebirthday}
+    </select>
+    <!-- 分页 -->
+    <select id="findUserByPage" parameterType="string" resultMap="usermap" >
+        ${sql}
+    </select>
+    <!-- 上传头像  -->
+    <update id="updatePortrait" >
+        update t_user set portrait = #{portrait} where id = #{id}
+    </update>
+    <!-- 登录 -->
+    <!--看自己情况了，要是只需要登录，就返回UserBean，要是还想要别的信息，就需要返回usermap-->
+    <select id="getLogin" resultType="UserBean">
+        select * from t_user where username = #{username}
+    </select>
+    <!-- 登录进去使用权限  -->
+    <select id="getPowerListById" resultType="PowerBean">
+        select d.* from t_user a
+            left join t_role b on a.rid = b.rid
+            LEFT JOIN t_r_p c on b.rid = c.rid
+            LEFT JOIN t_power d on c.id = d.id
+            where a.id = #{id}
+    </select>
+    <!-- 查看权限  -->
+    <select id="getUserPower" resultType="PowerBean">
+        SELECT * FROM `t_user` a
+        LEFT JOIN t_r_p b ON a.rid=b.rid
+        LEFT JOIN t_power c ON b.id=c.id
+        WHERE a.id=#{id}
+    </select>
+    <!-- 香烟 -->
+    <select id="getRsSmoke" resultType="RsBean">
+        select * from t_smoke where cardno = #{cardno}
+    </select>
+    <!-- 酒水 -->
+    <select id="getRsWine" resultType="RsBean">
+        select * from t_wine where cardno = #{cardno}
+    </select>
+    <!--第二个接口，接受分厂发来的数据 酒水-->
+    <insert id="saveWine" parameterType="WineBean">
+        insert into t_wine(cardno,name,price,address,madetime,vol)
+        values(#{cardno},#{name},#{price},#{address},#{madedate},#{vol})
+    </insert>
+    <!--第二个接口，接受分厂发来的数据 香烟-->
+    <insert id="saveSmoke" parameterType="SmokeBean">
+        insert into t_smoke(cardno,name,price,address,madetime)
+        values(#{cardno},#{name},#{price},#{address},#{madedate})
+    </insert>
+
+
+
+    <!-- 请假流程 -->
+    <!--当学生发起请假的请求时，保存 请假条-->
+    <insert id="insertPorcess" parameterType="ProcessBean">
+        <selectKey resultType="int" keyProperty="id" order="AFTER" keyColumn="id">
+            select last_insert_id()
+        </selectKey>
+        insert into t_process(sid,qjtime,stime,etime,qjcause,qjstatus,qjdate)
+        values(#{sid},#{qjtime},#{stime},#{etime},#{qjcause},#{qjstatus},#{qjdate})
+    </insert>
+    <!--查询学生的班级-->
+    <select id="getGradeByGid" resultType="GradeBean">
+        select * from t_grade where gid=#{gid}
+    </select>
+    <!--保存请假流程明细-->
+    <insert id="insertProcessPmx" parameterType="PmxBean">
+        insert into t_pmx(pid,userid,status,pstatus,pshunxu,shdate)
+        values(#{pid},#{userid},#{status},#{pstatus},#{pshunxu},#{shdate})
+    </insert>
+
+    <!--我的请假记录-->
+    <select id="getStuQjListBySid" resultType="QjVo">
+        select * from t_process where sid = #{sid}
+    </select>
+    <select id="getUserIdByPid" resultType="int">
+        select userid from t_pmx where pstatus=1 and pid=#{pid}
+    </select>
+    <select id="getUserIdByPidMaxShunxu" resultType="int">
+        select userid from t_pmx
+        where pshunxu = (select max(pshunxu) from t_pmx where pid = #{pid})
+        and pid=#{pid}
+    </select>
+    <select id="getUserIdByPidNopass" resultType="int">
+        select userid from t_pmx
+        where status = 2 and pid=#{pid}
+    </select>
+    <select id="getUnameAndRnameById" resultType="QjVo">
+        select a.username uname,b.rname
+        from t_user a
+		LEFT JOIN t_grade c ON a.gid=c.gid
+        LEFT JOIN t_role b on a.rid = b.rid
+        where a.rid=#{id}
+        /*select a.username uname,b.rname
+        from t_user a LEFT JOIN t_role b on a.rid = b.rid
+        where a.id=*/
+    </select>
+
+    <!--我的审核-->
+    <select id="getPidsByUserid" resultType="int">
+        select pid from t_pmx a where a.pstatus =1 and userid=#{rid}
+    </select>
+    <select id="getProcessById"  resultType="QjVo">
+        select * from t_process where id=#{id}
+    </select>
+    <select id="getStuInfoBySid" resultType="QjVo">
+        select a.username uname,b.gname
+        from t_user a LEFT JOIN t_grade b on a.gid = b.gid
+        where a.id = #{id}
+    </select>
+
+    <!--保存我的审核-->
+    <update id="updateProcessStatus">
+        update t_process set qjstatus=#{shstatus} where id=#{pid}
+    </update>
+    <update id="updatePmxStatus">
+        update t_pmx set status=#{shstatus},pstatus=2 where pid=#{pid} and userid=#{rid}
+    </update>
+    <select id="getQjMxInfo" resultType="int">
+        select pshunxu from t_pmx where pid=#{pid} and userid=#{rid}
+    </select>
+    <select id="getMaxPshunxu" resultType="int">
+        select max(pshunxu) from t_pmx where pid=#{pid}
+    </select>
+    <update id="updatePmxShunxu">
+        update t_pmx set pstatus = 1 where pid=#{pid} and pshunxu = #{pshunxu}
+    </update>
+
+
+</mapper>

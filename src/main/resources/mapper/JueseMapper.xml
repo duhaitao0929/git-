@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lening.mapper.JueseMapper">
+
+    <resultMap id="rolemap" type="JueseBean">
+        <id column="rid" property="rid"/>
+        <result column="rname" property="rname"/>
+        <association property="bumenBean" javaType="BumenBean">
+            <id property="deptid" column="deptid"/>
+            <result column="dname" property="dname"/>
+        </association>
+    </resultMap>
+    <!-- 查询角色列表 -->
+    <select id="getJueseList" resultMap="rolemap">
+        select * from t_role a left join t_dept b on a.deptid = b.deptid
+    </select>
+    <!-- 再查询角色列表里面的单条数据 -->
+    <select id="getRoleByRid" resultMap="rolemap" parameterType="int" >
+        select * from t_role a left join t_dept b on a.deptid = b.deptid where a.rid = #{rid}
+    </select>
+    <!-- 单条数据查出来之后 清空里面的部门id -->
+    <update id="updateDeptidNull" parameterType="int">
+        update t_role set deptid = null where  deptid = #{deptid}
+    </update>
+    <!-- 清空角色表里面的id之后 再修改角色表里面的部门id （相等于给角色表里面的部门id添加一个） -->
+    <update id="updateDeptidRole" >
+        update t_role set deptid = #{deptid} where rid = #{rid}
+    </update>
+    <!-- 查询权限所有   -->
+    <select id="getPowerList" resultType="PowerBean">
+        select * from t_power
+    </select>
+    <!-- 在查权限跟角色的中间表  查角色rid -->
+    <select id="getIdsByRid" resultType="int">
+        select id from t_r_p where rid=#{rid}
+    </select>
+    <delete id="deleteJuesePowerByrid">
+        delete from t_r_p where rid=#{rid}
+    </delete>
+    <insert id="saveJuesePower">
+        insert into t_r_p(rid,id) values(#{rid},#{sid})
+    </insert>
+
+</mapper>

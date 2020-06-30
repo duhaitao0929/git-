@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lening.mapper.BumenMapper">
+
+    <!-- 查询部门列表信息 -->
+    <select id="getbumenList" resultType="BumenBean">
+        select * from t_dept
+    </select>
+
+    <!-- 查询部门列表单个数据 id -->
+    <select id="getbumenByDeptid" resultType="BumenBean">
+        select * from t_dept where deptid=#{deptid}
+    </select>
+
+    <!-- 查询角色列表  -->
+    <select id="getjueseList" resultType="JueseBean">
+        select * from t_role
+    </select>
+
+    <!-- 查询角色列表里面的部门id  -->
+    <select id="RidsByDeptid" resultType="int">
+        select rid from t_role where deptid=#{deptid}
+    </select>
+
+    <!-- 先把角色表里面的部门id 变空  -->
+    <update id="deleteJueseByDeptid">
+         update t_role set deptid = null where deptid = #{deptid}
+    </update>
+    <!-- 二级联动 在根据角色id 修改部门id  -->
+    <update id="insertBumenJuese">
+        update t_role set deptid = #{deptid} where rid=#{rid}
+    </update>
+
+</mapper>
