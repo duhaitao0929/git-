@@ -19,6 +19,8 @@ public class BumenController {
     @Resource
     private JueseService jueseService;
 
+
+
     //查询部门列表信息
     @RequestMapping("/getbumenList")
     public String getbumenList(Model model) {
