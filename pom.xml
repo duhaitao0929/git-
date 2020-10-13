@@ -112,7 +112,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13.1</version>
         </dependency>
         <!--mybatis分页jar包，自己写的话，就不需要，要是想用分页工具类就需要jar包-->
         <dependency>
